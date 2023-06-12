@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
@@ -20,10 +21,10 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;
-import java.util.regex.Pattern;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -175,32 +176,22 @@ class AppTest {
         assertThat(output, containsString("WARNING: No files are configured to be copied/moved"));
     }
 
-    private void assertFileIsCopied(String output, String sourcePath, String destinationPath) {
-        File sourceFile = new File(sourcePath);
-        File destinationFile = new File(destinationPath);
+    private void assertFileIsCopied(final String output, final String sourceFile, final String copiedFile) throws IOException {
+        final Path sourcePath = Paths.get(sourceFile);
+        final Path copiedPath = Paths.get(copiedFile);
 
-        String normalizedSourcePath = sourceFile.getPath().replace(File.separatorChar, '/');
-        String normalizedDestinationPath = destinationFile.getPath().replace(File.separatorChar, '/');
+        assertThat(output, containsString("INFO: " + sourceFile + " -> " + copiedFile));
+        assertTrue(Files.exists(sourcePath), "File " + sourceFile + "must exist");
+        assertTrue(Files.exists(copiedPath), "File " + copiedFile + "must exist");
 
-        assertThat(output, containsString("INFO: " + normalizedSourcePath + " -> " + normalizedDestinationPath));
+        assertEquals(Files.readString(sourcePath), Files.readString(copiedPath));
     }
-
 
     private void assertFileIsMoved(final String output, final String sourceFile, final String copiedFile) {
-        String expectedLogMessagePattern = String.format(".*INFO: %s => %s.*", Pattern.quote(sourceFile), Pattern.quote(copiedFile));
-
-        System.out.println("Output:\n" + output); // Add this line to print the output
-
-        assertFalse(output.matches("(?s)" + expectedLogMessagePattern),
-                String.format("Expected log message not found: %s", expectedLogMessagePattern));
-
-        assertFalse(Files.exists(Paths.get(sourceFile)), String.format("File %s must not exist", sourceFile));
-        assertTrue(Files.exists(Paths.get(copiedFile)), String.format("File %s must exist", copiedFile));
+        assertThat(output, containsString("INFO: " + sourceFile + " => " + copiedFile));
+        assertFalse(Files.exists(Paths.get(sourceFile)), "File " + sourceFile + "must not exist");
+        assertTrue(Files.exists(Paths.get(copiedFile)), "File " + copiedFile + "must exist");
     }
-
-
-
-
 
     private String runApp(final String configFilePath) throws IllegalAccessException, InvocationTargetException {
         mainMethod.invoke(null, (Object) new String[]{configFilePath});
@@ -208,3 +199,4 @@ class AppTest {
         return logSink.toString();
     }
 }
+

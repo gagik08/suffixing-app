@@ -3,6 +3,8 @@ package com.epam.rd.autotasks.suffixing;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,24 +57,23 @@ public class SuffixingApp {
                 continue;
             }
 
+            // Create a new file with a suffix
             String newFileName = addSuffixToFile(file.getName(), suffix);
             File newFile = new File(file.getParent(), newFileName);
 
-            if (mode.equalsIgnoreCase("copy")) {
-                if (file.renameTo(newFile)) {
-                    logFileOperation(file.getPath(), newFile.getPath());
+            // Perform the copy/move operation
+            try {
+                if (mode.equalsIgnoreCase("copy")) {
+                    Files.copy(file.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } else if (mode.equalsIgnoreCase("move") || mode.equalsIgnoreCase("lower")) {
+                    Files.move(file.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 } else {
-                    logger.log(Level.SEVERE, "Failed to copy the file: " + file.getPath());
+                    logger.log(Level.SEVERE, "Mode is not recognized: " + mode);
+                    return;
                 }
-            } else if (mode.equalsIgnoreCase("move") || mode.equalsIgnoreCase("lower")) {
-                if (file.renameTo(newFile)) {
-                    logFileOperation(file.getPath(), newFile.getPath());
-                } else {
-                    logger.log(Level.SEVERE, "Failed to move the file: " + file.getPath());
-                }
-            } else {
-                logger.log(Level.SEVERE, "Mode is not recognized: " + mode);
-                return;
+                logFileOperation(file.getPath(), newFile.getPath(), mode.equalsIgnoreCase("move"));
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Failed to perform the file operation for: " + file.getPath(), e);
             }
         }
     }
@@ -87,13 +88,19 @@ public class SuffixingApp {
         return nameWithoutExtension + suffix + extension;
     }
 
-    private static void logFileOperation(String sourcePath, String destinationPath) {
+    private static void logFileOperation(String sourcePath, String destinationPath, boolean useArrowSeparator) {
         StringBuilder logMessage = new StringBuilder();
         logMessage.append("INFO: ");
         logMessage.append(sourcePath.replace('\\', '/'));
-        logMessage.append(" -> ");
+
+        String separator = useArrowSeparator ? " => " : " -> ";
+        logMessage.append(separator);
+
         logMessage.append(destinationPath.replace('\\', '/'));
-        logger.log(Level.INFO, logMessage.toString());
+
+        String formattedLogMessage = logMessage.toString().replace("INFO: INFO:", "INFO:");
+        logger.log(Level.INFO, formattedLogMessage);
     }
+
 
 }
