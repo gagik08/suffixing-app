@@ -175,16 +175,6 @@ class AppTest {
         assertThat(output, containsString("WARNING: No files are configured to be copied/moved"));
     }
 
-    //    private void assertFileIsCopied(final String output, final String sourceFile, final String copiedFile) throws IOException {
-//        final Path sourcePath = Paths.get(sourceFile);
-//        final Path copiedPath = Paths.get(copiedFile);
-//
-//        assertThat(output, containsString("INFO: " + sourceFile + " -> " + copiedFile));
-//        assertTrue(Files.exists(sourcePath), "File " + sourceFile + "must exist");
-//        assertTrue(Files.exists(copiedPath), "File " + copiedFile + "must exist");
-//
-//        assertEquals(Files.readString(sourcePath), Files.readString(copiedPath));
-//    }
     private void assertFileIsCopied(String output, String sourcePath, String destinationPath) {
         File sourceFile = new File(sourcePath);
         File destinationFile = new File(destinationPath);
