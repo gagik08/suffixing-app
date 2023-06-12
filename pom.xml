@@ -63,7 +63,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>Main</mainClass>
+                            <mainClass>SuffixingApp</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -124,5 +124,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
